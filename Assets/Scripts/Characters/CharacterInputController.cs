@@ -16,6 +16,7 @@ public class CharacterInputController : MonoBehaviour
 
 	public TrackManager trackManager;
 	public Character character;
+	public TouchPhaseDisplay touchPhaseDisplay;
 	public CharacterCollider characterCollider;
 	public GameObject blobShadow;
 	public float laneChangeSpeed = 1.0f;
@@ -76,6 +77,7 @@ public class CharacterInputController : MonoBehaviour
     protected const float k_TrackSpeedToJumpAnimSpeedRatio = 0.6f;
     protected const float k_TrackSpeedToSlideAnimSpeedRatio = 0.9f;
 
+    private Touch theTouch;
     protected void Awake ()
     {
         m_Premium = 0;
@@ -191,12 +193,22 @@ public class CharacterInputController : MonoBehaviour
         }
         else if(Input.GetKeyDown(KeyCode.UpArrow) && TutorialMoveCheck(1))
         {
-            Jump();
+			int stage = (int)Mathf.Floor(touchPhaseDisplay.elapsedTime);
+            Jump(stage);
         }
 		else if (Input.GetKeyDown(KeyCode.DownArrow) && TutorialMoveCheck(2))
 		{
 			if(!m_Sliding)
 				Slide();
+		}
+		
+		if(Input.touchCount > 0){
+			theTouch = Input.GetTouch(0);
+			if(theTouch.phase == TouchPhase.Ended)
+			{
+				int stage = (int)Mathf.Floor(touchPhaseDisplay.elapsedTime);
+				Jump(stage);
+			}       
 		}
 #else
         // Use touch input on mobile
@@ -220,7 +232,8 @@ public class CharacterInputController : MonoBehaviour
 						}
 						else if(TutorialMoveCheck(1))
 						{
-							Jump();
+							int stage = (int)Mathf.Floor(touchPhaseDisplay.elapsedTime);
+							Jump(stage);
 						}
 					}
 					else if(TutorialMoveCheck(0))
@@ -250,6 +263,7 @@ public class CharacterInputController : MonoBehaviour
 			{
 				m_IsSwiping = false;
 			}
+			
         }
 #endif
 
@@ -283,7 +297,7 @@ public class CharacterInputController : MonoBehaviour
 				}
 				else
 				{
-					verticalTargetPosition.y = Mathf.Sin(ratio * Mathf.PI) * jumpHeight;
+					verticalTargetPosition.y = Mathf.Sin(ratio * Mathf.PI) * jumpHeight * (Mathf.Floor(touchPhaseDisplay.elapsedTime));
 				}
 			}
 			else if(!AudioListener.pause)//use AudioListener.pause as it is an easily accessible singleton & it is set when the app is in pause too
@@ -313,7 +327,7 @@ public class CharacterInputController : MonoBehaviour
         }
 	}
 
-    public void Jump()
+    public void Jump(int stage)
     {
 	    if (!m_IsRunning)
 		    return;

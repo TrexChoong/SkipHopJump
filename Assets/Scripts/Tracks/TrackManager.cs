@@ -535,7 +535,7 @@ public class TrackManager : MonoBehaviour
 
         if (m_SafeSegementLeft <= 0)
         {
-            SpawnObstacle(newSegment);
+            //SpawnObstacle(newSegment);
         }
         else
             m_SafeSegementLeft -= 1;
