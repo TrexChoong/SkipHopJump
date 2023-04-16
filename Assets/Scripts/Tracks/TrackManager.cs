@@ -85,6 +85,9 @@ public class TrackManager : MonoBehaviour
     //used by the obstacle spawning code in the tutorial, as it need to spawn the 1st obstacle in the middle lane
     public bool firstObstacle { get; set; }
 
+    protected bool m_safeSegment = false;
+    protected bool m_safeInterval = false;
+
     protected float m_TimeToStart = -1.0f;
 
     // If this is set to -1, random seed is init to system clock, otherwise init to that value
@@ -535,7 +538,7 @@ public class TrackManager : MonoBehaviour
 
         if (m_SafeSegementLeft <= 0)
         {
-            //SpawnObstacle(newSegment);
+            SpawnObstacle(newSegment);
         }
         else
             m_SafeSegementLeft -= 1;
@@ -548,13 +551,19 @@ public class TrackManager : MonoBehaviour
 
     public void SpawnObstacle(TrackSegment segment)
     {
-        if (segment.possibleObstacles.Length != 0)
-        {
-            for (int i = 0; i < segment.obstaclePositions.Length; ++i)
+        if(m_safeSegment==false){
+            if (segment.possibleObstacles.Length != 0)
             {
-                AssetReference assetRef = segment.possibleObstacles[Random.Range(0, segment.possibleObstacles.Length)];
-                StartCoroutine(SpawnFromAssetReference(assetRef, segment, i));
+                //todo: final technique if cannot include minimum interval then limit to 1
+                for (int i = 0; i < segment.obstaclePositions.Length; ++i)
+                {
+                    AssetReference assetRef = segment.possibleObstacles[Random.Range(0, segment.possibleObstacles.Length)];
+                    StartCoroutine(SpawnFromAssetReference(assetRef, segment, i));
+                }
             }
+            m_safeSegment = true;
+        }else{
+            m_safeSegment = false;
         }
 
         StartCoroutine(SpawnCoinAndPowerup(segment));
@@ -565,6 +574,13 @@ public class TrackManager : MonoBehaviour
         AsyncOperationHandle op = Addressables.LoadAssetAsync<GameObject>(reference);
         yield return op; 
         GameObject obj = op.Result as GameObject;
+        if(m_safeInterval==false){
+            obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y, obj.transform.position.z-10f);
+            m_safeInterval = true;
+        } else {
+            obj.transform.position = new Vector3(obj.transform.position.x, obj.transform.position.y, obj.transform.position.z+10f);
+            m_safeInterval = false;
+        }
         if (obj != null)
         {
             Obstacle obstacle = obj.GetComponent<Obstacle>();
@@ -590,7 +606,6 @@ public class TrackManager : MonoBehaviour
                 Quaternion rot;
                 segment.GetPointAtInWorldUnit(currentWorldPos, out pos, out rot);
 
-
                 bool laneValid = true;
                 int testedLane = currentLane;
                 while (Physics.CheckSphere(pos + ((testedLane - 1) * laneOffset * (rot * Vector3.right)), 0.4f, 1 << 9))
@@ -608,8 +623,7 @@ public class TrackManager : MonoBehaviour
 
                 if (laneValid)
                 {
-                    pos = pos + ((currentLane - 1) * laneOffset * (rot * Vector3.right));
-
+                    pos = pos + ((0) * laneOffset * (rot * Vector3.right));
 
                     GameObject toUse = null;
                     if (Random.value < powerupChance)

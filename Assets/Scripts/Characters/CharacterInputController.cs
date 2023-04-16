@@ -58,6 +58,7 @@ public class CharacterInputController : MonoBehaviour
 	protected bool m_IsRunning;
 	
     protected float m_JumpStart;
+    protected int m_JumpStage;
     protected bool m_Jumping;
 
 	protected bool m_Sliding;
@@ -193,7 +194,7 @@ public class CharacterInputController : MonoBehaviour
         }
         else if(Input.GetKeyDown(KeyCode.UpArrow) && TutorialMoveCheck(1))
         {
-			int stage = (int)Mathf.Floor(touchPhaseDisplay.elapsedTime);
+			int stage = (int)Mathf.Floor(touchPhaseDisplay.elapsedTime*3);
             Jump(stage);
         }
 		else if (Input.GetKeyDown(KeyCode.DownArrow) && TutorialMoveCheck(2))
@@ -204,9 +205,9 @@ public class CharacterInputController : MonoBehaviour
 		
 		if(Input.touchCount > 0){
 			theTouch = Input.GetTouch(0);
-			if(theTouch.phase == TouchPhase.Ended)
+			if(theTouch.phase == TouchPhase.Ended && !isJumping)
 			{
-				int stage = (int)Mathf.Floor(touchPhaseDisplay.elapsedTime);
+				int stage = (int)Mathf.Floor(touchPhaseDisplay.elapsedTime*2);
 				Jump(stage);
 			}       
 		}
@@ -288,7 +289,8 @@ public class CharacterInputController : MonoBehaviour
 			{
                 // Same as with the sliding, we want a fixed jump LENGTH not fixed jump TIME. Also, just as with sliding,
                 // we slightly modify length with speed to make it more playable.
-				float correctJumpLength = jumpLength * (1.0f + trackManager.speedRatio);
+				//Debug.Log("bugfix a");
+				float correctJumpLength = (jumpLength * (1.0f + trackManager.speedRatio))* (m_JumpStage+1);
 				float ratio = (trackManager.worldDistance - m_JumpStart) / correctJumpLength;
 				if (ratio >= 1.0f)
 				{
@@ -297,7 +299,7 @@ public class CharacterInputController : MonoBehaviour
 				}
 				else
 				{
-					verticalTargetPosition.y = Mathf.Sin(ratio * Mathf.PI) * jumpHeight * (Mathf.Floor(touchPhaseDisplay.elapsedTime));
+					verticalTargetPosition.y = Mathf.Sin(ratio * Mathf.PI) * jumpHeight * (m_JumpStage+1);
 				}
 			}
 			else if(!AudioListener.pause)//use AudioListener.pause as it is an easily accessible singleton & it is set when the app is in pause too
@@ -339,6 +341,7 @@ public class CharacterInputController : MonoBehaviour
 
 			float correctJumpLength = jumpLength * (1.0f + trackManager.speedRatio);
 			m_JumpStart = trackManager.worldDistance;
+			m_JumpStage = stage;
             float animSpeed = k_TrackSpeedToJumpAnimSpeedRatio * (trackManager.speed / correctJumpLength);
 
             character.animator.SetFloat(s_JumpingSpeedHash, animSpeed);

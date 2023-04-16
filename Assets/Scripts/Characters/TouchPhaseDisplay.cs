@@ -24,19 +24,19 @@ public class TouchPhaseDisplay : MonoBehaviour
             if(theTouch.phase == TouchPhase.Ended)
             {
                 elapsedTime = Time.time - startTime;
-                phaseDisplayText.text = theTouch.phase.ToString() + elapsedTime;
+                //phaseDisplayText.text = theTouch.phase.ToString() + elapsedTime;
                 timeTouchEnded = Time.time;
             }else if(theTouch.phase == TouchPhase.Began)
             {
                 startTime = Time.time;
             }else if(theTouch.phase == TouchPhase.Stationary)
             {
-                elapsedTime = (Time.time - startTime)*1000;
+                elapsedTime = (Time.time - startTime)*2000;
                 transformCharge.SetCharge((int)elapsedTime);
             }
             else if(Time.time - timeTouchEnded > displayTime)
             {
-                phaseDisplayText.text = theTouch.phase.ToString();
+                //phaseDisplayText.text = theTouch.phase.ToString();
                 timeTouchEnded = Time.time;
             }        
         }
